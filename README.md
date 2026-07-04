@@ -29,3 +29,14 @@
 
 - Whatever is left in the source dict after the stream was never seen in the
   destination, so those are the `missing` files.
+
+## Homework 3 — byte-by-byte check on ETag mismatch
+`validation.py`
+
+- Added a `files_are_identical` helper. When two ETags differ, it downloads both
+  objects and compares their raw bytes.
+
+- Equal bytes now count as `ok`. only a real byte difference is reported as an
+  ETag mismatch. 
+  
+- The source dict now holds `(key, etag)` instead of just the etag.

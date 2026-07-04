@@ -67,11 +67,20 @@ class FileLogger:
             lines.append(f"and {remaining} more")
         return "\n".join(lines)
 
+
+# For Homework 3
+def files_are_identical(source_key, destination_key):
+    """Download both objects and compare their raw bytes."""
+    source_bytes = s3.get_object(Bucket=SOURCE_MINIO_BUCKET, Key=source_key)["Body"].read()
+    destination_bytes = s3.get_object(Bucket=DESTINATION_MINIO_BUCKET, Key=destination_key)["Body"].read()
+    return source_bytes == destination_bytes
+
+
 paginator = s3.get_paginator("list_objects_v2")
 
 # Homework 2
 source_files = {
-    obj["Key"].split("/")[-1]: obj["ETag"]
+    obj["Key"].split("/")[-1]: (obj["Key"], obj["ETag"])
     for page in paginator.paginate(Bucket=SOURCE_MINIO_BUCKET, Prefix=SOURCE_MINIO_FOLDER)
     for obj in page.get("Contents", [])
     if obj["Key"].endswith(".xml")
@@ -88,15 +97,18 @@ for folder in DESTINATION_OUTPUT_FOLDERS:
         for obj in page.get("Contents", []):
             dest_count += 1
             filename = obj["Key"].split("/")[-1]
-            source_etag = source_files.pop(filename, None)
-            if source_etag is None:
+            entry = source_files.pop(filename, None)
+            if entry is None:
                 continue
-            if source_etag != obj["ETag"]:
-                # TODO Homework 3: adapt algorithm for comparing the files byte by byte in case of ETags mismatch.
-                #  For testing purposes, upload the file via multipart upload
+            source_key, source_etag = entry
+            if source_etag == obj["ETag"]:
+                ok += 1
+                continue
+            # Homework 3
+            if files_are_identical(source_key, obj["Key"]):
+                ok += 1
+            else:
                 etag_mismatch.add(f"{filename} (source={source_etag}, dest={obj['ETag']})")
-                continue
-            ok += 1
 
 # TODO Homework 4: [depends on HW 3]:
 #  move the comparison to the separate thread in Python
