@@ -1,5 +1,6 @@
 import boto3
 from botocore.client import Config
+from concurrent.futures import ThreadPoolExecutor
 
 # TODO Homework 0: refactor the solution to make it production-ready:
 #  - make sure no destination output paths are hardcoded
@@ -91,6 +92,7 @@ missing = FileLogger()
 etag_mismatch = FileLogger()
 ok = 0
 dest_count = 0
+pending = []
 
 for folder in DESTINATION_OUTPUT_FOLDERS:
     for page in paginator.paginate(Bucket=DESTINATION_MINIO_BUCKET, Prefix=folder):
@@ -104,15 +106,21 @@ for folder in DESTINATION_OUTPUT_FOLDERS:
             if source_etag == obj["ETag"]:
                 ok += 1
                 continue
-            # Homework 3
-            if files_are_identical(source_key, obj["Key"]):
-                ok += 1
-            else:
-                etag_mismatch.add(f"{filename} (source={source_etag}, dest={obj['ETag']})")
 
-# TODO Homework 4: [depends on HW 3]:
-#  move the comparison to the separate thread in Python
-#  to speed up the processing
+            pending.append((filename, source_key, source_etag, obj["Key"], obj["ETag"]))
+
+# Homework 4
+def compare_pending(item):
+    filename, source_key, source_etag, dest_key, dest_etag = item
+    identical = files_are_identical(source_key, dest_key)
+    return identical, filename, source_etag, dest_etag
+
+with ThreadPoolExecutor(max_workers=8) as executor:
+    for identical, filename, source_etag, dest_etag in executor.map(compare_pending, pending):
+        if identical:
+            ok += 1
+        else:
+            etag_mismatch.add(f"{filename} (source={source_etag}, dest={dest_etag})")
 
 # Whatever remains in source_files was never matched in the destination.
 for filename in source_files:

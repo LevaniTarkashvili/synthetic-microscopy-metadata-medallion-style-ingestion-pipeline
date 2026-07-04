@@ -40,3 +40,16 @@
   ETag mismatch. 
   
 - The source dict now holds `(key, etag)` instead of just the etag.
+
+## Homework 4 — byte checks in threads
+`validation.py`
+
+- Moved the byte-by-byte comparison to separate threads to speed up the
+  processing. The comparison downloads files from S3, so running it inline made
+  the loop wait on every mismatch.
+
+- Each mismatch is collected in a `pending` list, then the comparisons run
+  together in a `ThreadPoolExecutor` so the downloads overlap.
+
+- The counting (`ok` / `etag_mismatch`) happens back on the main, so no locks are 
+  needed.
