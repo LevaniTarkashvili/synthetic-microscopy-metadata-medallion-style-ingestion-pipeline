@@ -85,3 +85,7 @@
 - Organised the script into functions (`build_s3_client`, `list_source_files`,
   `compare_buckets`, `report`, `main`) behind an `if __name__ == "__main__"` guard. 
   Also `s3` client is passed into the functions instead of being a global.
+
+- Small consistency fixes: both the source and destination listings now skip
+  non-`.xml` objects (previously only the source did), and docstrings were
+  tidied up.

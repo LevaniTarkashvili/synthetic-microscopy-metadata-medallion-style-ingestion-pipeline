@@ -38,7 +38,7 @@ class FileLogger:
 
 
 def build_s3_client():
-    """Create a boto3 S3 client for MinIO"""
+    """Create a boto3 S3 client for MinIO."""
     return boto3.client(
         "s3",
         endpoint_url=os.environ["MINIO_ENDPOINT"],
@@ -69,7 +69,6 @@ def list_source_files(s3):
 
 def compare_buckets(s3, source_files):
     """Compare the destination bucket against source_files."""
-
     paginator = s3.get_paginator("list_objects_v2")
     missing = FileLogger()
     etag_mismatch = FileLogger()
@@ -79,6 +78,8 @@ def compare_buckets(s3, source_files):
 
     for page in paginator.paginate(Bucket=DESTINATION_MINIO_BUCKET, Prefix=DESTINATION_MINIO_FOLDER):
         for obj in page.get("Contents", []):
+            if not obj["Key"].endswith(".xml"):
+                continue
             dest_count += 1
             filename = obj["Key"].split("/")[-1]
             entry = source_files.pop(filename, None)
