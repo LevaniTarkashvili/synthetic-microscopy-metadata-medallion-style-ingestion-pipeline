@@ -89,3 +89,5 @@
 - Small consistency fixes: both the source and destination listings now skip
   non-`.xml` objects (previously only the source did), and docstrings were
   tidied up.
+
+- Moved the four pipeline scripts into a `src/` folder, a bit of organization
