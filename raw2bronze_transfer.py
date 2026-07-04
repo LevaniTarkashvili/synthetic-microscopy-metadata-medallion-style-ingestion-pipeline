@@ -38,8 +38,12 @@ for key in keys:
     root = ET.fromstring(content)
     generation_date = root.findtext("GenerationDate")
 
-    # TODO Homework 5: handle the case when generation_date is not found
-    year_month = generation_date[:7]
+    # Homework 5
+    if generation_date:
+        year_month = generation_date[:7]
+    else:
+        year_month = "missing"
+        print(f"No GenerationDate found in {key}; sending it to month=missing")
     destination_key = f"{S3_PREFIX}month={year_month}/{key.split('/')[-1]}"
     s3.upload_fileobj(io.BytesIO(content), DESTINATION_MINIO_BUCKET, destination_key)
     print(f"File was transfered to bronze: {destination_key}")

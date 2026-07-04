@@ -53,3 +53,10 @@
 
 - The counting (`ok` / `etag_mismatch`) happens back on the main, so no locks are 
   needed.
+
+## Homework 5 — handle a missing `generation_date`
+`raw2bronze_transfer.py`
+
+- NULL date is caught and the file is goes to a `month=missing` partition and also 
+  a message is printed. Now the transfer does not crash when generation_date is not 
+  found and the file is not lost.
