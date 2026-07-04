@@ -44,18 +44,27 @@ s3 = boto3.client(
     region_name="us-east-1",
 )
 
-# TODO Homework 1
-#  implement the class to log first LIMIT records and the general issues count
-#  see the draft below
-# class FileLogger:
-#     # limit = 10
-#
-#     def __str__(self):
-#         return (
-#             f'There are top {self.limit} problematic files:',
-#             self.records,
-#             f'and {self.count} more'
-#         )
+class FileLogger:
+    """Logs the first LIMIT problematic files plus a count of the rest."""
+
+    limit = 10
+
+    def __init__(self):
+        self.records = []
+        self.count = 0
+
+    def add(self, record):
+        self.count += 1
+        if len(self.records) < self.limit:
+            self.records.append(record)
+
+    def __str__(self):
+        lines = [f"Top {self.limit} problematic files:"]
+        lines.extend(f"  {record}" for record in self.records)
+        remaining = self.count - len(self.records)
+        if remaining > 0:
+            lines.append(f"and {remaining} more")
+        return "\n".join(lines)
 
 paginator = s3.get_paginator("list_objects_v2")
 
@@ -84,31 +93,28 @@ for folder in DESTINATION_OUTPUT_FOLDERS:
 print(f"Files in source: {len(source_files)}")
 print(f"Files in destination: {len(dest_files)}\n")
 
-missing = []
-etag_mismatch = []
+missing = FileLogger()
+etag_mismatch = FileLogger()
 ok = 0
 
 for filename, source_etag in source_files.items():
     if filename not in dest_files:
-        missing.append(filename)
+        missing.add(filename)
         continue
     if source_etag != dest_files[filename]:
-        etag_mismatch.append((filename, source_etag, dest_files[filename]))
+        dest_etag = dest_files[filename]
+        etag_mismatch.add(f"{filename} (source={source_etag}, dest={dest_etag})")
         continue
     ok += 1
 
 print(f"Success: {ok}")
-print(f"Missing: {len(missing)}")
-print(f"ETag mismatch: {len(etag_mismatch)}\n")
+print(f"Missing: {missing.count}")
+print(f"ETag mismatch: {etag_mismatch.count}\n")
 
-if missing:
+if missing.count:
     print("Files missing:")
-    for f in missing:
-        print(f"  {f}")
+    print(missing)
 
-if etag_mismatch:
-    print("\nETag are not equal:")
-    for filename, src_etag, dst_etag in etag_mismatch:
-        print(f" {filename}")
-        print(f" source: {src_etag}")
-        print(f" dest: {dst_etag}")
+if etag_mismatch.count:
+    print("ETag are not equal:")
+    print(etag_mismatch)
