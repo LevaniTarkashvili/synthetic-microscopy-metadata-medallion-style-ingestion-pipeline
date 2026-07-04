@@ -1,0 +1,36 @@
+services:
+  storage:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    command: server /data --console-address :9090
+    ports:
+      - "9100:9000"   # S3 API — scripts connect to http://localhost:9100
+      - "9090:9090"   # web console — browse at http://localhost:9090
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  storage-init:
+    image: minio/mc:latest
+    depends_on:
+      storage:
+        condition: service_started
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        until /usr/bin/mc alias set storage http://storage:9000 minioadmin minioadmin123; do
+          echo "waiting for minio to come up..."
+          sleep 1
+        done
+        /usr/bin/mc mb --ignore-existing storage/microscopy-data
+        /usr/bin/mc mb --ignore-existing storage/bronze
+        echo "buckets ready: microscopy-data, bronze"
+
+volumes:
+  minio-data:
