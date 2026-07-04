@@ -44,6 +44,7 @@ s3 = boto3.client(
     region_name="us-east-1",
 )
 
+# Homework 1
 class FileLogger:
     """Logs the first LIMIT problematic files plus a count of the rest."""
 
@@ -68,44 +69,45 @@ class FileLogger:
 
 paginator = s3.get_paginator("list_objects_v2")
 
-# TODO Homework 2: adapt algorithm for the larger files number
+# Homework 2
 source_files = {
     obj["Key"].split("/")[-1]: obj["ETag"]
     for page in paginator.paginate(Bucket=SOURCE_MINIO_BUCKET, Prefix=SOURCE_MINIO_FOLDER)
     for obj in page.get("Contents", [])
     if obj["Key"].endswith(".xml")
 }
+source_count = len(source_files)
 
-dest_files = {}
+missing = FileLogger()
+etag_mismatch = FileLogger()
+ok = 0
+dest_count = 0
+
 for folder in DESTINATION_OUTPUT_FOLDERS:
     for page in paginator.paginate(Bucket=DESTINATION_MINIO_BUCKET, Prefix=folder):
         for obj in page.get("Contents", []):
+            dest_count += 1
             filename = obj["Key"].split("/")[-1]
-            dest_files[filename] = obj["ETag"]
-
-# TODO Homework 3: adapt algorithm for comparing the files byte by byte in case of ETags mismatch.
-#  For testing purposes, upload the file via multipart upload
+            source_etag = source_files.pop(filename, None)
+            if source_etag is None:
+                continue
+            if source_etag != obj["ETag"]:
+                # TODO Homework 3: adapt algorithm for comparing the files byte by byte in case of ETags mismatch.
+                #  For testing purposes, upload the file via multipart upload
+                etag_mismatch.add(f"{filename} (source={source_etag}, dest={obj['ETag']})")
+                continue
+            ok += 1
 
 # TODO Homework 4: [depends on HW 3]:
 #  move the comparison to the separate thread in Python
 #  to speed up the processing
 
-print(f"Files in source: {len(source_files)}")
-print(f"Files in destination: {len(dest_files)}\n")
+# Whatever remains in source_files was never matched in the destination.
+for filename in source_files:
+    missing.add(filename)
 
-missing = FileLogger()
-etag_mismatch = FileLogger()
-ok = 0
-
-for filename, source_etag in source_files.items():
-    if filename not in dest_files:
-        missing.add(filename)
-        continue
-    if source_etag != dest_files[filename]:
-        dest_etag = dest_files[filename]
-        etag_mismatch.add(f"{filename} (source={source_etag}, dest={dest_etag})")
-        continue
-    ok += 1
+print(f"Files in source: {source_count}")
+print(f"Files in destination: {dest_count}\n")
 
 print(f"Success: {ok}")
 print(f"Missing: {missing.count}")

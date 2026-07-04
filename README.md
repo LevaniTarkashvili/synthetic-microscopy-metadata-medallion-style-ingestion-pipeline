@@ -15,3 +15,17 @@
 
 - `missing` and `etag_mismatch` are now `FileLogger` instances, and the report 
    just prints each one.
+
+## Homework 2 — scale the comparison
+`validation.py`
+
+- The old code built two full dicts in memory (every source file and every
+  destination file) before comparing. Now only the source side is kept in a
+  dict.
+
+- The destination is streamed page by page and each destination file is compared 
+  as it arrives and popped out of the source dict. `pop` looks a file up and
+  removes it in one step: a match is checked, then taken off the source dict.
+
+- Whatever is left in the source dict after the stream was never seen in the
+  destination, so those are the `missing` files.
