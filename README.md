@@ -70,3 +70,11 @@
 - Added `.env.example` 
 
 - Added `python-dotenv` to `requirements.txt`.
+
+## Homework 0 — production-ready cleanup
+`validation.py`
+
+- Removed the hardcoded list of `month=YYYY-MM` destination folders. Instead the
+  script asks the bronze bucket for everything under the `xml` prefix, so it
+  scans whatever folders actually exist (including `month=missing`) without them
+  being written in the code.

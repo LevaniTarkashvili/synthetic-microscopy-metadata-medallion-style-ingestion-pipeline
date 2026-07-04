@@ -20,26 +20,7 @@ MINIO_SECRET_KEY = os.environ["MINIO_SECRET_KEY"]
 SOURCE_MINIO_BUCKET = "microscopy-data"
 SOURCE_MINIO_FOLDER = "xml"
 DESTINATION_MINIO_BUCKET = "bronze"
-DESTINATION_OUTPUT_FOLDERS = [
-    "xml/month=2024-01/",
-    "xml/month=2024-02/",
-    "xml/month=2024-03/",
-    "xml/month=2024-04/",
-    "xml/month=2024-05/",
-    "xml/month=2024-06/",
-    "xml/month=2024-07/",
-    "xml/month=2024-08/",
-    "xml/month=2024-09/",
-    "xml/month=2024-10/",
-    "xml/month=2024-11/",
-    "xml/month=2024-12/",
-    "xml/month=2025-01/",
-    "xml/month=2025-02/",
-    "xml/month=2025-03/",
-    "xml/month=2025-04/",
-    "xml/month=2025-05/",
-    "xml/month=2025-06/",
-]
+DESTINATION_MINIO_FOLDER = "xml"
 
 s3 = boto3.client(
     "s3",
@@ -99,20 +80,19 @@ ok = 0
 dest_count = 0
 pending = []
 
-for folder in DESTINATION_OUTPUT_FOLDERS:
-    for page in paginator.paginate(Bucket=DESTINATION_MINIO_BUCKET, Prefix=folder):
-        for obj in page.get("Contents", []):
-            dest_count += 1
-            filename = obj["Key"].split("/")[-1]
-            entry = source_files.pop(filename, None)
-            if entry is None:
-                continue
-            source_key, source_etag = entry
-            if source_etag == obj["ETag"]:
-                ok += 1
-                continue
+for page in paginator.paginate(Bucket=DESTINATION_MINIO_BUCKET, Prefix=DESTINATION_MINIO_FOLDER):
+    for obj in page.get("Contents", []):
+        dest_count += 1
+        filename = obj["Key"].split("/")[-1]
+        entry = source_files.pop(filename, None)
+        if entry is None:
+            continue
+        source_key, source_etag = entry
+        if source_etag == obj["ETag"]:
+            ok += 1
+            continue
 
-            pending.append((filename, source_key, source_etag, obj["Key"], obj["ETag"]))
+        pending.append((filename, source_key, source_etag, obj["Key"], obj["ETag"]))
 
 # Homework 4
 def compare_pending(item):
