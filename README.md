@@ -78,3 +78,6 @@
   script asks the bronze bucket for everything under the `xml` prefix, so it
   scans whatever folders actually exist (including `month=missing`) without them
   being written in the code.
+
+- Replaced all `print` calls with the `logging` module. Counts are logged at
+  `INFO` and problems (missing / mismatched files) at `WARNING`.

@@ -1,9 +1,12 @@
+import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
 
 import boto3
 from botocore.client import Config
 from dotenv import load_dotenv
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 load_dotenv()
 
@@ -111,17 +114,15 @@ with ThreadPoolExecutor(max_workers=8) as executor:
 for filename in source_files:
     missing.add(filename)
 
-print(f"Files in source: {source_count}")
-print(f"Files in destination: {dest_count}\n")
+logging.info("Files in source: %s", source_count)
+logging.info("Files in destination: %s", dest_count)
 
-print(f"Success: {ok}")
-print(f"Missing: {missing.count}")
-print(f"ETag mismatch: {etag_mismatch.count}\n")
+logging.info("Success: %s", ok)
+logging.info("Missing: %s", missing.count)
+logging.info("ETag mismatch: %s", etag_mismatch.count)
 
 if missing.count:
-    print("Files missing:")
-    print(missing)
+    logging.warning("Files missing:\n%s", missing)
 
 if etag_mismatch.count:
-    print("ETag are not equal:")
-    print(etag_mismatch)
+    logging.warning("ETag are not equal:\n%s", etag_mismatch)
