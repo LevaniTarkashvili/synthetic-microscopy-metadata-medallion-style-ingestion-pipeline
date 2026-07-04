@@ -1,6 +1,11 @@
+import os
+from concurrent.futures import ThreadPoolExecutor
+
 import boto3
 from botocore.client import Config
-from concurrent.futures import ThreadPoolExecutor
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # TODO Homework 0: refactor the solution to make it production-ready:
 #  - make sure no destination output paths are hardcoded
@@ -9,9 +14,9 @@ from concurrent.futures import ThreadPoolExecutor
 #  - mind the naming
 #  - use logging instead of print
 #  - ... change and any other things which you don't like
-MINIO_ENDPOINT = "http://localhost:9100"
-MINIO_ACCESS_KEY = "minioadmin"
-MINIO_SECRET_KEY = "minioadmin123"
+MINIO_ENDPOINT = os.environ["MINIO_ENDPOINT"]
+MINIO_ACCESS_KEY = os.environ["MINIO_ACCESS_KEY"]
+MINIO_SECRET_KEY = os.environ["MINIO_SECRET_KEY"]
 SOURCE_MINIO_BUCKET = "microscopy-data"
 SOURCE_MINIO_FOLDER = "xml"
 DESTINATION_MINIO_BUCKET = "bronze"

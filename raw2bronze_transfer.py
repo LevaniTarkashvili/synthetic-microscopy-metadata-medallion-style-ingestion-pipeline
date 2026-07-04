@@ -1,19 +1,22 @@
 import io
+import os
 import xml.etree.ElementTree as ET
 
 import boto3
 from botocore.client import Config
+from dotenv import load_dotenv
 
 SOURCE_FOLDER = "./data"
 SOURCE_MINIO_BUCKET = "microscopy-data"
 DESTINATION_MINIO_BUCKET = "bronze"
 S3_PREFIX = "xml/"
 
+load_dotenv()
 s3 = boto3.client(
     "s3",
-    endpoint_url="http://localhost:9100",
-    aws_access_key_id="minioadmin",
-    aws_secret_access_key="minioadmin123",
+    endpoint_url=os.environ["MINIO_ENDPOINT"],
+    aws_access_key_id=os.environ["MINIO_ACCESS_KEY"],
+    aws_secret_access_key=os.environ["MINIO_SECRET_KEY"],
     config=Config(signature_version="s3v4"),
     region_name="us-east-1",
 )

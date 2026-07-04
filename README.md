@@ -60,3 +60,13 @@
 - NULL date is caught and the file is goes to a `month=missing` partition and also 
   a message is printed. Now the transfer does not crash when generation_date is not 
   found and the file is not lost.
+
+## Homework 6 — hide credentials
+`files_upload.py`, `raw2bronze_transfer.py`, `validation.py`
+
+- The MinIO endpoint, access key, and secret key are no longer hardcoded. Each
+  script now calls `load_dotenv()` and reads them from environment variables.
+
+- Added `.env.example` 
+
+- Added `python-dotenv` to `requirements.txt`.
